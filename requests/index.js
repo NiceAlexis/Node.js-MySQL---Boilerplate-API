@@ -99,13 +99,28 @@ async function getById(req, res, next) {
 
 async function getByEmployeeId(req, res, next) {
     try {
+        const employeeId = parseInt(req.params.employeeId, 10);
+
+        // Admins can view any employee's requests
+        if (req.user.role !== Role.Admin) {
+            const employee = await db.Employee.findOne({ where: { accountId: req.user.id } });
+
+            if (!employee || employee.id !== employeeId) {
+                return res.status(403).json({ message: 'Forbidden: Not your requests' });
+            }
+        }
+
         const requests = await db.Request.findAll({
-            where: { employeeId: req.params.employeeId },
+            where: { employeeId },
             include: [{ model: db.RequestItem, as: 'RequestItems' }]
         });
+
         res.json(requests);
-    } catch (err) { next(err); }
+    } catch (err) {
+        next(err);
+    }
 }
+
 
 async function update(req, res, next) {
     try {

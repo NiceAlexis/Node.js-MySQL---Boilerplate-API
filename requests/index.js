@@ -105,6 +105,11 @@ async function getByEmployeeId(req, res, next) {
         if (req.user.role !== Role.Admin) {
             const employee = await db.Employee.findOne({ where: { accountId: req.user.id } });
 
+            // Add debug logs
+            console.log('Logged in user id:', req.user.id);
+            console.log('Employee found:', employee ? employee.id : null);
+            console.log('Requested employeeId:', employeeId);
+
             if (!employee || employee.id !== employeeId) {
                 return res.status(403).json({ message: 'Forbidden: Not your requests' });
             }
@@ -120,7 +125,6 @@ async function getByEmployeeId(req, res, next) {
         next(err);
     }
 }
-
 
 async function update(req, res, next) {
     try {

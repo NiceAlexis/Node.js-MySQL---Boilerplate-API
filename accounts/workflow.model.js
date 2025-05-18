@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
         details: {
             type: DataTypes.JSON,
             allowNull: true
+        },
+        status: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'Pending'
         }
     });
 

@@ -11,19 +11,40 @@ router.post('/onboarding', authorize(Role.Admin), onboarding);
 
 async function create(req, res, next) {
     try {
-        const workflow = await db.Workflow.create(req.body);
+        const workflow = await db.Workflow.create({
+            employeeId: req.body.employeeId,
+            type: req.body.type,
+            details: req.body.details,
+            status: req.body.status || 'Pending' // default to 'Pending' if not provided
+        });
         res.status(201).json(workflow);
     } catch (err) { next(err); }
 }
+
 
 async function getByEmployeeId(req, res, next) {
     try {
         const workflows = await db.Workflow.findAll({
             where: { employeeId: req.params.employeeId }
         });
-        res.json(workflows);
+
+        const enrichedWorkflows = await Promise.all(workflows.map(async (workflow) => {
+            const data = workflow.toJSON();
+
+            if (data.type === 'Transfer' && data.details?.newDepartmentId) {
+                const dept = await db.Department.findByPk(data.details.newDepartmentId);
+                if (dept) {
+                    data.details.newDepartmentName = dept.name;
+                }
+            }
+
+            return data;
+        }));
+
+        res.json(enrichedWorkflows);
     } catch (err) { next(err); }
 }
+
 
 async function updateStatus(req, res, next) {
     try {
